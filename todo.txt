@@ -4,4 +4,4 @@
 - labels
   - # criticals
   - # total
-  - scale rules
+  - # in rule

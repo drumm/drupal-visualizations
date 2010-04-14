@@ -137,7 +137,7 @@ $(document).ajaxStop(function() {
   var w = 1000,
     h = 100,
     x = pv.Scale.linear(start, now).range(0, w),
-    y = pv.Scale.linear(0, maxIssues).range(0, h);
+    y = pv.Scale.linear(0, maxIssues).range(0, h / 2);
    
   var vis = new pv.Panel()
     .width(w)
@@ -163,11 +163,8 @@ $(document).ajaxStop(function() {
     // Issue count axis
     vis.add(pv.Rule)
       .data(y.ticks())
-      .visible(function() !(this.index % 2))
       .bottom(function(d) Math.round(y(d)) - .5 + h * (versions.length - .5 - k))
       .strokeStyle("rgba(255,255,255,.3)")
-      .anchor("left").add(pv.Label)
-      .text(function(d) d.toFixed());
 
     // Features graph
     vis.add(pv.Panel)
@@ -185,11 +182,8 @@ $(document).ajaxStop(function() {
     // Issue count axis
     vis.add(pv.Rule)
       .data(y.ticks())
-      .visible(function() !(this.index % 2))
-      .top(function(d) Math.round(y(d)) - .5 + h * (k + 1.5) + 20)
+      .top(function(d) Math.round(y(d)) - .5 + h * (k + .5) + 20)
       .strokeStyle("rgba(255,255,255,.3)")
-      .anchor("left").add(pv.Label)
-      .text(function(d) d.toFixed());
   });
 
   // Time axis
