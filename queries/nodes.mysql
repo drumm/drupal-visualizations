@@ -1,0 +1,1 @@
+SELECT pi.nid AS key_nid, pi.original_issue_data AS php_original_issue_data, n.created FROM project_issues pi INNER JOIN node n ON n.nid = pi.nid WHERE pi.nid IN (SELECT DISTINCT nid FROM project_issues WHERE pid = 3060 UNION SELECT DISTINCT nid FROM project_issue_comments WHERE pid = 3060);

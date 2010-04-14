@@ -1,0 +1,1 @@
+SELECT prn.nid AS key_rid, if(prn.version = 'x.y.z', prn.version, concat(prn.version_major, '.', coalesce(prn.version_minor, '0'))) v, n.created FROM project_release_nodes prn INNER JOIN node n ON n.nid = prn.nid WHERE prn.pid = 3060;

@@ -1,0 +1,220 @@
+<!DOCTYPE HTML>
+
+<html>
+  <head>
+    <title>Open Issues</title>
+    <script type="text/javascript" src="lib/jquery-1.4.2.min.js"></script>
+    <script type="text/javascript" src="lib/protovis-d3.1.js"></script>
+  </head>
+  <body>
+    <script type="text/javascript+protovis"> 
+
+function weekOf(time) {
+  return Math.ceil(time / 60 / 60 / 24 / 7);
+}
+
+$.getJSON('results/nodes.json', function (data) {
+  nodes = data;
+});
+
+$.getJSON('results/releases.json', function (data) {
+  releases = data;
+});
+
+$.getJSON('results/issue_states.json', function (data) {
+  states = data;
+});
+
+$.getJSON('results/comments.json', function (data) {
+  comments = data;
+});
+
+// Render when all AJAX requests complete
+$(document).ajaxStop(function() {
+  // These define the versions and statuses to limit for
+  var first = true, versions = ['4.7', 'x.y.z', '5.0', '6.0', '7.0', '8.0'],
+    processed = pv.dict(versions, function() {return {
+      "active critical": {},
+      "needs work critical": {},
+      "needs review critical": {},
+      "reviewed & tested by the community critical": {},
+      "active": {},
+      "needs work": {},
+      "needs review": {},
+      "reviewed & tested by the community": {},
+    }}),
+    features = pv.dict(versions, function() {return {
+      "active critical": {},
+      "needs work critical": {},
+      "needs review critical": {},
+      "reviewed & tested by the community critical": {},
+      "active": {},
+      "needs work": {},
+      "needs review": {},
+      "reviewed & tested by the community": {},
+    }}),
+    colors = {
+      "active critical": '#bfbfbf',
+      "needs work critical": '#bf7c60',
+      "needs review critical": '#bfbf60',
+      "reviewed & tested by the community critical": '#7bbf60',
+      "active": '#bfbfbf',
+      "needs work": '#bf7c60',
+      "needs review": '#bfbf60',
+      "reviewed & tested by the community": '#7bbf60',
+    }
+    now = weekOf(Date.now() / 1000),
+    start = now;
+    maxIssues = 0;
+
+  // For each node
+  $.each(pv.nest(comments).key(function(d) d.nid).entries(), function (k, node) {
+    // Put initial node before comments
+    if (nodes[node.key] !== undefined) {
+      node.values.unshift({
+        category: nodes[node.key].php_original_issue_data.category,
+        nid: nodes[node.key].php_original_issue_data.nid,
+        pid: nodes[node.key].php_original_issue_data.pid,
+        priority: nodes[node.key].php_original_issue_data.priority,
+        s: states[nodes[node.key].php_original_issue_data.sid] === undefined ? null : states[nodes[node.key].php_original_issue_data.sid].name,
+        timestamp: nodes[node.key].created,
+        v: releases[nodes[node.key].php_original_issue_data.rid] === undefined ? null : releases[nodes[node.key].php_original_issue_data.rid].v
+      });
+    }
+
+    // Make a weekly timeline
+    var last, timeline = pv.dict(pv.range(weekOf(node.values[0].timestamp), now), function() null);
+
+    // Fill the timeline
+    $.each(node.values, function (k, comment) {
+      var week = weekOf(comment.timestamp);
+      if (timeline[week] !== undefined) {
+        timeline[week] = {
+          // Filter for including by attributes
+          include: comment.pid === '3060' && (comment.category === 'bug' || comment.category === 'task'),
+          feature: comment.pid === '3060' && (comment.category === 'feature'),
+          s: (comment.s === undefined) ? undefined : (comment.s + (comment.priority === '1' ? ' critical' : '')),
+          v: comment.v
+        }
+      }
+    });
+
+    // Use the timeline to fill the data by version and status
+    $.each(timeline, function (week, info) {
+      if (info === null) info = last;
+      last = info;
+
+      // Filtering is applied here since an issue may go in and out of our
+      // interest.
+      if (info.include && processed[info.v] !== undefined && processed[info.v][info.s] !== undefined) {
+        if (processed[info.v][info.s][week] === undefined) processed[info.v][info.s][week] = 0;
+        processed[info.v][info.s][week] += 1;
+        start = Math.min(start, week);
+      }
+      if (info.feature && features[info.v] !== undefined && features[info.v][info.s] !== undefined) {
+        if (features[info.v][info.s][week] === undefined) features[info.v][info.s][week] = 0;
+        features[info.v][info.s][week] += 1;
+        start = Math.min(start, week);
+      }
+    });
+  });
+
+  // Merge onto zeroed full date range to match scales
+  $.each(versions, function (k, version) {
+    $.each(processed[version], function (k) {
+      processed[version][k] = $.extend(pv.dict(pv.range(start, now), function(s) 0), processed[version][k]);
+    });
+    $.each(features[version], function (k) {
+      features[version][k] = $.extend(pv.dict(pv.range(start, now), function(s) 0), features[version][k]);
+    });
+    maxIssues = Math.max(maxIssues, pv.sum(pv.values(processed[version]).map(function(v) pv.max(pv.values(v)))));
+
+    if (first) {
+      first = false;
+      console.log(
+        pv.sum(
+          pv.entries(processed[version]).map(function(v) pv.sum(v.value))
+        )
+      );
+    }
+  });
+
+  /*
+  // Draw it
+  var w = 1000,
+    h = 100,
+    x = pv.Scale.linear(start, now).range(0, w),
+    y = pv.Scale.linear(0, maxIssues).range(0, h);
+   
+  var vis = new pv.Panel()
+    .width(w)
+    .height(h * versions.length + 20)
+    .bottom(20)
+    .left(30)
+    .right(10);
+   
+  $.each(versions, function (k, version) {
+    // Bugs & tasks graph
+    vis.add(pv.Panel)
+        .bottom(h * (versions.length - .5 - k))
+        .data(pv.entries(processed[version]))
+      .add(pv.Area)
+        .data(function(a) pv.entries(a.value))
+        .left(function(d) x(d.key))
+        .bottom(pv.Layout.stack())
+        .height(function(d) y(d.value))
+        .fillStyle(function(d, a) colors[a.key])
+//        .lineWidth(0.5)
+//        .strokeStyle(function(d, a) a.key === 'reviewed & tested by the community critical' ? '#000' : null); //todo top only
+      .add(pv.Line)
+        .lineWidth(0.5).strokeStyle('#000');
+
+    // Issue count axis
+    vis.add(pv.Rule)
+      .data(y.ticks())
+      .visible(function() !(this.index % 2))
+      .bottom(function(d) Math.round(y(d)) - .5 + h * (versions.length - .5 - k))
+      .strokeStyle("rgba(255,255,255,.3)")
+      .anchor("left").add(pv.Label)
+      .text(function(d) d.toFixed());
+
+    // Features graph
+    vis.add(pv.Panel)
+        .top(h * (k + .5) + 20)
+        .data(pv.entries(features[version]))
+      .add(pv.Area)
+        .data(function(a) pv.entries(a.value))
+        .left(function(d) x(d.key))
+        .top(pv.Layout.stack())
+        .height(function(d) y(d.value))
+        .fillStyle(function(d, a) colors[a.key]);
+//        .lineWidth(0.5)
+//        .strokeStyle(function(d, a) a.key === 'reviewed & tested by the community critical' ? '#000' : null);
+
+    // Issue count axis
+    vis.add(pv.Rule)
+      .data(y.ticks())
+      .visible(function() !(this.index % 2))
+      .top(function(d) Math.round(y(d)) - .5 + h * (k + 1.5) + 20)
+      .strokeStyle("rgba(255,255,255,.3)")
+      .anchor("left").add(pv.Label)
+      .text(function(d) d.toFixed());
+  });
+
+  // Time axis
+  vis.add(pv.Rule)
+    .data(x.ticks())
+    .left(function(d) Math.round(x(d)) - .5)
+    .height(5)
+    .bottom(0)
+    .strokeStyle("rgba(0,0,0,.5)")
+    .anchor("bottom").add(pv.Label)
+    .text(function(d) (new Date(d * 7 * 24 * 60 * 60 * 1000)).format('%b %Y'));
+   
+  vis.render();
+*/
+});
+ 
+    </script>
+  </body>
+</html>

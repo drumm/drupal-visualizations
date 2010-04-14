@@ -1,0 +1,1 @@
+SELECT sid AS sid_key, name FROM project_issue_state;
