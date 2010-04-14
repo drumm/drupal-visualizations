@@ -38,6 +38,7 @@ $(document).ajaxStop(function() {
       "needs work critical": {},
       "needs review critical": {},
       "reviewed & tested by the community critical": {},
+      "criticals line": {},
       "active": {},
       "needs work": {},
       "needs review": {},
@@ -48,6 +49,7 @@ $(document).ajaxStop(function() {
       "needs work critical": {},
       "needs review critical": {},
       "reviewed & tested by the community critical": {},
+      "criticals line": {},
       "active": {},
       "needs work": {},
       "needs review": {},
@@ -58,6 +60,7 @@ $(document).ajaxStop(function() {
       "needs work critical": '#bf7c60',
       "needs review critical": '#bfbf60',
       "reviewed & tested by the community critical": '#7bbf60',
+      "criticals line": '#000',
       "active": '#bfbfbf',
       "needs work": '#bf7c60',
       "needs review": '#bfbf60',
@@ -154,8 +157,8 @@ $(document).ajaxStop(function() {
         .bottom(pv.Layout.stack())
         .height(function(d) y(d.value))
         .fillStyle(function(d, a) colors[a.key])
-//        .lineWidth(0.5)
-//        .strokeStyle(function(d, a) a.key === 'reviewed & tested by the community critical' ? '#000' : null); //todo top only
+        .lineWidth(1)
+        .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
 
     // Issue count axis
     vis.add(pv.Rule)
@@ -175,9 +178,9 @@ $(document).ajaxStop(function() {
         .left(function(d) x(d.key))
         .top(pv.Layout.stack())
         .height(function(d) y(d.value))
-        .fillStyle(function(d, a) colors[a.key]);
-//        .lineWidth(0.5)
-//        .strokeStyle(function(d, a) a.key === 'reviewed & tested by the community critical' ? '#000' : null);
+        .fillStyle(function(d, a) colors[a.key])
+        .lineWidth(1)
+        .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
 
     // Issue count axis
     vis.add(pv.Rule)
