@@ -128,18 +128,8 @@ $(document).ajaxStop(function() {
       features[version][k] = $.extend(pv.dict(pv.range(start, now), function(s) 0), features[version][k]);
     });
     maxIssues = Math.max(maxIssues, pv.sum(pv.values(processed[version]).map(function(v) pv.max(pv.values(v)))));
-
-    if (first) {
-      first = false;
-      console.log(
-        pv.sum(
-          pv.entries(processed[version]).map(function(v) pv.sum(v.value))
-        )
-      );
-    }
   });
 
-  /*
   // Draw it
   var w = 1000,
     h = 100,
@@ -212,7 +202,6 @@ $(document).ajaxStop(function() {
     .text(function(d) (new Date(d * 7 * 24 * 60 * 60 * 1000)).format('%b %Y'));
    
   vis.render();
-*/
 });
  
     </script>
