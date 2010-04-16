@@ -149,41 +149,41 @@ $(document).ajaxStop(function() {
   $.each(versions, function (k, version) {
     // Bugs & tasks graph
     vis.add(pv.Panel)
-        .bottom(h * (versions.length - .5 - k))
-        .data(pv.entries(processed[version]))
-      .add(pv.Area)
-        .data(function(a) pv.entries(a.value))
-        .left(function(d) x(d.key))
-        .bottom(pv.Layout.stack())
-        .height(function(d) y(d.value))
-        .fillStyle(function(d, a) colors[a.key])
-        .lineWidth(1)
-        .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
+      .bottom(h * (versions.length - .5 - k))
+      .data(pv.entries(processed[version]))
+    .add(pv.Area)
+      .data(function(a) pv.entries(a.value))
+      .left(function(d) x(d.key))
+      .bottom(pv.Layout.stack())
+      .height(function(d) y(d.value))
+      .fillStyle(function(d, a) colors[a.key])
+      .lineWidth(1)
+      .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
 
     // Issue count axis
     vis.add(pv.Rule)
       .data(y.ticks())
       .bottom(function(d) Math.round(y(d)) - .5 + h * (versions.length - .5 - k))
-      .strokeStyle("rgba(255,255,255,.3)")
+      .strokeStyle("rgba(255,255,255,.3)");
 
     // Features graph
     vis.add(pv.Panel)
-        .top(h * (k + .5) + 20)
-        .data(pv.entries(features[version]))
-      .add(pv.Area)
-        .data(function(a) pv.entries(a.value))
-        .left(function(d) x(d.key))
-        .top(pv.Layout.stack())
-        .height(function(d) y(d.value))
-        .fillStyle(function(d, a) colors[a.key])
-        .lineWidth(1)
-        .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
+      .top(h * (k + .5) + 20)
+      .data(pv.entries(features[version]))
+    .add(pv.Area)
+      .data(function(a) pv.entries(a.value))
+      .left(function(d) x(d.key))
+      .top(pv.Layout.stack())
+      .height(function(d) y(d.value))
+      .fillStyle(function(d, a) colors[a.key])
+      .lineWidth(1)
+      .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
 
     // Issue count axis
     vis.add(pv.Rule)
       .data(y.ticks())
       .top(function(d) Math.round(y(d)) - .5 + h * (k + .5) + 20)
-      .strokeStyle("rgba(255,255,255,.3)")
+      .strokeStyle("rgba(255,255,255,.3)");
   });
 
   // Time axis
