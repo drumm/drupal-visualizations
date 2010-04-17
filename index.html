@@ -134,8 +134,8 @@ $(document).ajaxStop(function() {
   });
 
   // Draw it
-  var w = 1000,
-    h = 100,
+  var w = 900,
+    h = 150,
     x = pv.Scale.linear(start, now).range(0, w),
     y = pv.Scale.linear(0, maxIssues).range(0, h / 2);
    
@@ -143,13 +143,14 @@ $(document).ajaxStop(function() {
     .width(w)
     .height(h * versions.length + 20)
     .bottom(20)
-    .left(30)
-    .right(10);
+    .left(0)
+    .right(30);
    
   $.each(versions, function (k, version) {
+    var bottom = h * (versions.length - .5 - k);
     // Bugs & tasks graph
     vis.add(pv.Panel)
-      .bottom(h * (versions.length - .5 - k))
+      .bottom(bottom)
       .data(pv.entries(processed[version]))
     .add(pv.Area)
       .data(function(a) pv.entries(a.value))
@@ -159,12 +160,17 @@ $(document).ajaxStop(function() {
       .fillStyle(function(d, a) colors[a.key])
       .lineWidth(1)
       .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
-
-    // Issue count axis
-    vis.add(pv.Rule)
+    vis.add(pv.Rule) // Issue count axis
       .data(y.ticks())
-      .bottom(function(d) Math.round(y(d)) - .5 + h * (versions.length - .5 - k))
-      .strokeStyle("rgba(255,255,255,.3)");
+      .visible(function(d) d !== 0)
+      .bottom(function(d) y(d) + bottom)
+      .strokeStyle("rgba(255,255,255,0.5)")
+    .anchor("right").add(pv.Label)
+      .visible(function(d) d === y.ticks()[1]);
+    vis.add(pv.Label) // Version label
+      .bottom(bottom)
+      .font('bold 1em sans-serif')
+      .text(version);
 
     // Features graph
     vis.add(pv.Panel)
@@ -177,13 +183,14 @@ $(document).ajaxStop(function() {
       .height(function(d) y(d.value))
       .fillStyle(function(d, a) colors[a.key])
       .lineWidth(1)
-      .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null);
-
-    // Issue count axis
-    vis.add(pv.Rule)
+      .strokeStyle(function(d, a) a.key === 'criticals line' ? '#000' : null)
+    vis.add(pv.Rule) // Issue count axis
       .data(y.ticks())
+      .visible(function(d) d !== 0)
       .top(function(d) Math.round(y(d)) - .5 + h * (k + .5) + 20)
-      .strokeStyle("rgba(255,255,255,.3)");
+      .strokeStyle("rgba(255,255,255,0.5)")
+    .anchor("right").add(pv.Label)
+      .visible(function(d) d === y.ticks()[1]);
   });
 
   // Time axis
@@ -193,7 +200,7 @@ $(document).ajaxStop(function() {
     .height(5)
     .bottom(0)
     .strokeStyle("rgba(0,0,0,.5)")
-    .anchor("bottom").add(pv.Label)
+  .anchor("bottom").add(pv.Label)
     .text(function(d) (new Date(d * 7 * 24 * 60 * 60 * 1000)).format('%b %Y'));
    
   vis.render();
